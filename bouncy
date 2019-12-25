@@ -1,0 +1,132 @@
+#!/usr/bin/python3
+from pygame import*
+import random, time, sys
+init()
+disp=display.set_mode((800,600))
+display.set_caption('BOUNCY™')
+ball=image.load('ball.png')
+platform=image.load('platform.png')
+nonoe=image.load('nonoe.png')
+logo=image.load('logo.png')
+gameover=image.load('gameover.png')
+mixer.music.load('boss-fight.wav')
+black=(0,0,0)
+white=(255,255,255)
+dead=0
+plat=0
+ballpos=(395,300)
+bounces=0
+bosspos=(0,0)
+fight=0
+disp.blit(logo, (0,0))
+display.update()
+done=False
+while not done:
+	for e in event.get():
+		if e.type == KEYUP:
+			if e.key == K_SPACE:
+				done=True
+def lure(num,target):
+	out=num
+	if num > target:
+		out-=fight
+	if num < target:
+		out+=fight
+	return(out)
+def bounce():
+	global disp
+	global bounces
+	ballx,bally=ballpos
+	for x in range(120):
+		bally-=5
+		disp.blit(ball,(ballx,bally))
+		display.update()
+		time.sleep(0.015)
+	bally=600
+	disp.fill(black)
+	for x in range(60):
+		bally-=5
+		disp.blit(ball,(ballx,bally))
+		display.update()
+		time.sleep(0.02)
+	bounces+=1
+	print(bounces)
+def boss():
+	global disp
+	global bosspos
+	global ballpos
+	global dead
+	global fight
+	fight+=1
+	done=0
+	frames=0
+	mixer.music.play()
+	while not done:
+		disp.fill(black)
+		bossx,bossy=bosspos
+		ballx,bally=ballpos
+		bossx=lure(bossx,ballx)
+		bossy=lure(bossy,bally)
+		bosspos=(bossx,bossy)
+		ballpos=(ballx,bally)
+		if bosspos == ballpos:
+			done=1
+			dead=1
+		for events in event.get():
+			if events.type == KEYDOWN or events.type == KEYUP:
+				if events.key == K_UP:
+					bally-=20
+				if events.key == K_DOWN:
+					bally+=20
+				if events.key == K_LEFT:
+					ballx-=20
+				if events.key == K_RIGHT:
+					ballx+=20
+		ballpos=(ballx,bally)
+		disp.blit(nonoe,bosspos)
+		disp.blit(ball,ballpos)
+		display.update()
+		frames+=1
+		if frames == 2500:
+			done=1
+		time.sleep(0.01)
+while not dead:
+	if not plat:
+		platpos=(random.randint(0,700),550)
+		plat=1
+	ballx,bally=ballpos
+	disp.fill(black)
+	disp.blit(platform,platpos)
+	disp.blit(ball,(ballx,int(bally)))
+	platx,platy=platpos
+	if platx < ballx < platx+50 and bally == platy:
+		bally=300
+		plat=0
+		bounce()
+		try:
+			if (bounces/5 == int(bounces/5)):
+				boss()
+		except:
+			pass
+	for events in event.get():
+		if events.type == KEYDOWN or events.type == KEYUP:
+			if events.key == K_LEFT:
+				ballx-=20
+			if events.key == K_RIGHT:
+				ballx+=20
+	bally+=1
+	if bally == 600:
+		dead=1
+	ballpos=(ballx,bally)
+	display.update()
+	time.sleep(0.005)
+for y in range(200):
+	for x in range(750):
+		disp.blit(platform,(x,y*3))
+	display.update()
+time.sleep(1)
+disp.blit(gameover, (0,0))
+display.update()
+time.sleep(1)
+quit()
+print('G A M E   O V E R ! ! !')
